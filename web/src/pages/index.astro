@@ -1,10 +1,14 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { site, whatsappUrl, formatMoney, hoursSummary, durationText } from "../lib";
+import { site, whatsappUrl, formatMoney, hoursSummary, durationText, serviceIcons, trustIcons } from "../lib";
 
 const b = site.business;
 const hours = hoursSummary();
 const minPrice = Math.min(...site.services.map((s) => s.price_from));
+const [pre, post = ""] = b.tagline.split(b.hero_highlight);
+const urgent = site.services.find((s) => s.id === "urgent");
+const featured = site.services[0];
+const others = site.services.slice(1);
 ---
 <Layout
   title={`${b.name} · ${b.tagline}`}
@@ -13,87 +17,151 @@ const minPrice = Math.min(...site.services.map((s) => s.price_from));
   <main>
     <section class="hero">
       <div class="container">
-        <h1>{b.tagline}</h1>
-        <p class="lead">Atención puntual, precios claros y cita en línea, sin esperar a que te contesten por WhatsApp.</p>
-        <ul class="facts">
-          <li>{hours[0].label}: {hours[0].text}</li>
-          <li>{b.location.area}, {b.location.city}</li>
-          <li>Valoración desde {formatMoney(minPrice)}</li>
-        </ul>
-        <div class="actions">
-          <a class="btn" href="#agendar">Agendar cita</a>
-          <a class="btn btn-soft" href={whatsappUrl} target="_blank" rel="noopener">WhatsApp</a>
+        <div>
+          <span class="eyebrow">{b.specialty} · {b.location.area}</span>
+          <h1>{pre}<em>{b.hero_highlight}</em>{post}</h1>
+          <p class="lead" style="margin-top:1.25rem">Atención puntual, precios claros y cita en línea, sin esperar a que te contesten por WhatsApp.</p>
+          <div class="actions">
+            <a class="btn" href="#agendar">Agendar cita</a>
+            <a class="btn btn-soft" href={whatsappUrl} target="_blank" rel="noopener">Escribir por WhatsApp</a>
+          </div>
         </div>
+        <aside class="status-card" aria-label="Estado del consultorio">
+          <span class="status-pill" id="status" data-open="false" data-hours={JSON.stringify(site.hours)}>Consulta el horario</span>
+          <dl>
+            <div><dt>Ubicación</dt><dd>{b.location.area}, {b.location.city}</dd></div>
+            <div><dt>Primera valoración</dt><dd>{formatMoney(minPrice)} · {durationText(featured.duration_minutes)}</dd></div>
+            <div><dt>Estacionamiento</dt><dd>{b.parking}</dd></div>
+          </dl>
+        </aside>
       </div>
     </section>
 
+    <div class="trust-wrap">
+      <div class="container">
+        <ul class="trust">
+          {b.trust.map((t, i) => (
+            <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" set:html={trustIcons[i % trustIcons.length]} />{t}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
     <section class="section" id="servicios">
       <div class="container">
-        <h2>Servicios</h2>
-        <p class="small">Precios desde, por pieza o tratamiento. El precio final se confirma en la valoración.</p>
-        <div class="grid">
-          {site.services.map((s) => (
-            <article class="card">
+        <div class="section-head reveal">
+          <span class="eyebrow">Servicios</span>
+          <h2>Lo que hacemos, con precio a la vista</h2>
+          <p class="small">Precios desde, por pieza o tratamiento. El precio final se confirma en la valoración.</p>
+        </div>
+        <div class="bento">
+          <article class="tile feature reveal">
+            <span class="tag">Empieza aquí</span>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" set:html={serviceIcons[featured.id]} />
+            <h3>{featured.name}</h3>
+            <p>{featured.description}</p>
+            <div class="meta"><span class="price">{formatMoney(featured.price_from)}</span><span>{durationText(featured.duration_minutes)}</span></div>
+            <a class="btn btn-light btn-small" href="#agendar">Agendar valoración</a>
+          </article>
+          {others.map((s) => (
+            <article class="tile reveal">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" set:html={serviceIcons[s.id]} />
               <h3>{s.name}</h3>
               <p>{s.description}</p>
-              <div class="meta">
-                <span class="price">Desde {formatMoney(s.price_from)}</span>
-                <span>{durationText(s.duration_minutes)}</span>
-              </div>
+              <div class="meta"><span class="price"><small style="font-family:var(--font-body);font-size:0.75rem;font-weight:600">desde </small>{formatMoney(s.price_from)}</span><span>{durationText(s.duration_minutes)}</span></div>
             </article>
           ))}
         </div>
       </div>
     </section>
 
-    <section class="section section-soft" id="agendar">
+    <section class="section section-soft" id="primera-visita">
       <div class="container">
-        <h2>Agendar cita</h2>
-        <div class="book-box">
+        <div class="section-head reveal">
+          <span class="eyebrow">Tu primera visita</span>
+          <h2>Tres pasos, sin sorpresas</h2>
+        </div>
+        <ol class="steps">
+          {b.first_visit.map((st) => (
+            <li class="reveal"><h3>{st.title}</h3><p>{st.text}</p></li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <section class="section" id="agendar">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Agendar</span>
+          <h2>Elige tu día y hora</h2>
+        </div>
+        <div class="book-box reveal">
           <h3>Aquí irá la agenda en línea</h3>
           <p>Elegirás el servicio, el día y la hora, y dejarás solo tu nombre y teléfono. Se conecta en el siguiente paquete del proyecto.</p>
-          <p class="small">No pedimos motivo de consulta ni datos de salud. Si el paciente es menor, agenda el adulto con su propio nombre y teléfono.</p>
+          <p class="small" style="margin:0">No pedimos motivo de consulta ni datos de salud. Si el paciente es menor, agenda el adulto con su propio nombre y teléfono.</p>
         </div>
       </div>
     </section>
 
-    <section class="section" id="horario">
+    <section class="section" style="padding-top:0">
+      <div class="container">
+        <div class="urgent reveal">
+          <div>
+            <h2>¿Dolor o golpe en un diente?</h2>
+            <p>Agenda una <strong>{urgent?.name.toLowerCase()}</strong> y te atendemos en el primer espacio libre del día.</p>
+          </div>
+          <a class="btn btn-light" href={whatsappUrl} target="_blank" rel="noopener">Escribir por WhatsApp</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-soft" id="horario">
       <div class="container two-col">
-        <div>
-          <h2>Horario</h2>
+        <div class="reveal">
+          <span class="eyebrow">Horario</span>
+          <h2>Cuándo atendemos</h2>
           <table class="hours">
             <tbody>
-              {hours.map((h) => (<tr><th scope="row">{h.label}</th><td>{h.text}</td></tr>))}
+              {hours.map((h) => (<tr data-days={h.days.join(",")}><th scope="row">{h.label}</th><td>{h.text}</td></tr>))}
             </tbody>
           </table>
         </div>
-        <div>
-          <h2>Ubicación</h2>
+        <div class="reveal">
+          <span class="eyebrow">Ubicación</span>
+          <h2>Cómo llegar</h2>
           <p>{b.location.area}, {b.location.city}</p>
           <p>Estacionamiento: {b.parking}.</p>
           <p>Pagos: {b.payment_methods.join(", ")}.</p>
-          <a class="btn btn-soft" href={b.location.maps_url} target="_blank" rel="noopener">Cómo llegar</a>
+          <a class="btn btn-soft" href={b.location.maps_url} target="_blank" rel="noopener">Abrir en Google Maps</a>
         </div>
       </div>
     </section>
 
-    <section class="section section-soft" id="doctora">
-      <div class="container doctor">
+    <section class="section" id="doctora">
+      <div class="container doctor reveal">
         <div class="avatar" aria-hidden="true">{b.professional.initials}</div>
         <div>
+          <span class="eyebrow">Tu dentista</span>
           <h2>{b.professional.name}</h2>
-          <p class="small">{b.professional.title} · Cédula profesional: {b.professional.license}</p>
-          <p>{b.professional.bio}</p>
+          <p class="lead">{b.professional.bio}</p>
+          <p class="small" style="margin:0.25rem 0 0">{b.professional.title} · Cédula profesional: {b.professional.license}</p>
+          <div class="chips">{b.specialties.map((c) => <span class="chip">{c}</span>)}</div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="preguntas">
-      <div class="container" style="max-width:44rem">
-        <h2>Preguntas frecuentes</h2>
-        {site.faq.map((f) => (
-          <details><summary>{f.q}</summary><p>{f.a}</p></details>
-        ))}
+    <section class="section section-soft" id="preguntas">
+      <div class="container faq-grid">
+        <div class="section-head reveal">
+          <span class="eyebrow">Preguntas frecuentes</span>
+          <h2>Lo que más nos preguntan</h2>
+          <p class="small">¿No ves tu duda? Escríbenos por WhatsApp.</p>
+        </div>
+        <div>
+          {site.faq.map((f) => (
+            <details><summary>{f.q}</summary><p>{f.a}</p></details>
+          ))}
+        </div>
       </div>
     </section>
   </main>
@@ -102,4 +170,35 @@ const minPrice = Math.min(...site.services.map((s) => s.price_from));
     <a class="btn" href="#agendar">Agendar cita</a>
     <a class="btn btn-soft" href={whatsappUrl} target="_blank" rel="noopener">WhatsApp</a>
   </nav>
+
+  <script is:inline>
+    // "Open now" badge and today's row, computed in the office's time zone (Mexico City).
+    (function () {
+      var el = document.getElementById("status");
+      if (!el) return;
+      var hours = JSON.parse(el.dataset.hours);
+      var parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Mexico_City", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
+      var get = function (t) { return parts.find(function (p) { return p.type === t; }).value; };
+      var idx = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(get("weekday"));
+      var now = (parseInt(get("hour"), 10) % 24) * 60 + parseInt(get("minute"), 10);
+      var m = function (s) { var a = s.split(":"); return parseInt(a[0], 10) * 60 + parseInt(a[1], 10); };
+      var open = hours[idx].ranges.find(function (r) { return now >= m(r[0]) && now < m(r[1]); });
+      var text = "Cerrado ahora";
+      if (open) { text = "Abierto ahora · hasta las " + open[1]; el.dataset.open = "true"; }
+      else {
+        var next = hours[idx].ranges.find(function (r) { return now < m(r[0]); });
+        if (next) text = "Cerrado · abre hoy a las " + next[0];
+        else {
+          for (var i = 1; i <= 7; i++) {
+            var d = hours[(idx + i) % 7];
+            if (d.ranges.length) { text = "Cerrado · abre " + (i === 1 ? "mañana" : "el " + d.day) + " a las " + d.ranges[0][0]; break; }
+          }
+        }
+      }
+      el.textContent = text;
+      document.querySelectorAll(".hours tr").forEach(function (tr) {
+        if (tr.dataset.days.split(",").indexOf(hours[idx].day) > -1) tr.classList.add("today");
+      });
+    })();
+  </script>
 </Layout>
