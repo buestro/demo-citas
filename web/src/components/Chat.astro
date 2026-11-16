@@ -1,0 +1,118 @@
+---
+// FAQ assistant widget (floating button + panel). Vanilla JS, no dependencies.
+// It talks to POST /api/chat. Nothing is stored in the browser: closing the page ends the conversation.
+import { site, whatsappUrl } from "../lib";
+
+const apiUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:8000";
+const quick = [0, 3, 2].map((i) => site.faq[i]?.q).filter(Boolean) as string[];
+---
+<div class="chat" id="chat" data-api={apiUrl} data-wa={whatsappUrl} data-max-turns="8">
+  <button class="chat-fab" id="chat-open" type="button" aria-haspopup="dialog" aria-controls="chat-panel" aria-expanded="false">
+    <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.600 7.100L4 20l1-4.600A8 8 0 1 1 21 12z" /></svg>
+    <span>Pregúntanos</span>
+  </button>
+
+  <section class="chat-panel" id="chat-panel" role="dialog" aria-label={`Asistente de ${site.business.name}`} hidden>
+    <header class="chat-head">
+      <div class="chat-title"><span class="chat-dot" aria-hidden="true"></span>
+        <div><strong>Asistente virtual</strong><small>IA · solo información pública del consultorio</small></div>
+      </div>
+      <button class="chat-close" id="chat-close" type="button" aria-label="Cerrar asistente">×</button>
+    </header>
+
+    <div class="chat-log" id="chat-log" role="log" aria-live="polite">
+      <div class="msg bot">¡Hola! Soy el asistente de {site.business.name}. Puedo ayudarte con horarios, precios, ubicación y cómo agendar.</div>
+      <div class="chat-quick" id="chat-quick">
+        {quick.map((q) => <button type="button" class="chip-btn">{q}</button>)}
+      </div>
+    </div>
+
+    <form class="chat-form" id="chat-form" autocomplete="off">
+      <label class="hp" aria-hidden="true">No llenar<input name="website" tabindex="-1" autocomplete="off" /></label>
+      <input id="chat-input" name="q" maxlength="400" placeholder="Escribe tu pregunta…" aria-label="Tu pregunta" required />
+      <button class="btn btn-small" id="chat-send" type="submit">Enviar</button>
+    </form>
+    <p class="chat-note">Demo con IA. No da diagnósticos ni consejos médicos. No escribas datos de salud ni de menores.</p>
+  </section>
+</div>
+
+<script>
+  const root = document.getElementById("chat") as HTMLElement;
+  const api = (root.dataset.api ?? "").replace(/\/$/, "");
+  const wa = root.dataset.wa ?? "#";
+  const maxTurns = Number(root.dataset.maxTurns ?? 8);
+  const panel = document.getElementById("chat-panel") as HTMLElement;
+  const fab = document.getElementById("chat-open") as HTMLButtonElement;
+  const log = document.getElementById("chat-log") as HTMLElement;
+  const form = document.getElementById("chat-form") as HTMLFormElement;
+  const input = document.getElementById("chat-input") as HTMLInputElement;
+  const send = document.getElementById("chat-send") as HTMLButtonElement;
+  const quick = document.getElementById("chat-quick") as HTMLElement;
+  const history: { role: "user" | "assistant"; content: string }[] = [];
+  let busy = false;
+
+  const setOpen = (open: boolean) => {
+    panel.hidden = !open;
+    fab.setAttribute("aria-expanded", String(open));
+    root.classList.toggle("is-open", open);
+    if (open) input.focus(); else fab.focus();
+  };
+  fab.addEventListener("click", () => setOpen(panel.hidden));
+  document.getElementById("chat-close")!.addEventListener("click", () => setOpen(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.hidden) setOpen(false); });
+
+  const add = (cls: string, text: string) => {
+    const d = document.createElement("div");
+    d.className = "msg " + cls;
+    d.textContent = text; // text only: never HTML from the model
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+    return d;
+  };
+
+  const turns = () => history.filter((m) => m.role === "user").length;
+
+  function lock(message: string) {
+    input.disabled = true; send.disabled = true;
+    const d = add("bot", message + " ");
+    const a = document.createElement("a");
+    a.href = wa; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Escríbenos por WhatsApp";
+    d.appendChild(a);
+  }
+
+  async function ask(text: string) {
+    if (busy || !text.trim()) return;
+    busy = true; send.disabled = true; quick.hidden = true;
+    add("user", text);
+    history.push({ role: "user", content: text });
+    const typing = add("bot typing", "");
+    typing.innerHTML = "<span></span><span></span><span></span>";
+    typing.setAttribute("aria-label", "Escribiendo");
+    try {
+      const r = await fetch(`${api}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history.slice(-10), website: (form.elements.namedItem("website") as HTMLInputElement).value }),
+      });
+      const data = await r.json().catch(() => ({}));
+      typing.remove();
+      if (!r.ok) {
+        history.pop();
+        const detail = typeof data.detail === "string" ? data.detail : "No pude responder ahora. Intenta de nuevo.";
+        if (r.status === 429 || r.status === 503) lock(detail); else add("bot error", detail);
+        return;
+      }
+      add("bot", data.reply);
+      history.push({ role: "assistant", content: data.reply });
+      if (turns() >= maxTurns) lock("Llegaste al límite de mensajes de esta demo.");
+    } catch {
+      typing.remove(); history.pop();
+      add("bot error", "No pude conectar. Si la demo estaba dormida, espera unos segundos e inténtalo otra vez.");
+    } finally {
+      busy = false; if (!input.disabled) { send.disabled = false; input.focus(); }
+    }
+  }
+
+  form.addEventListener("submit", (e) => { e.preventDefault(); const t = input.value; input.value = ""; ask(t); });
+  quick.addEventListener("click", (e) => { const b = (e.target as HTMLElement).closest("button"); if (b) ask(b.textContent ?? ""); });
+</script>

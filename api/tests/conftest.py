@@ -14,6 +14,8 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DB_PATH", str(tmp_path / "test.sqlite"))
     monkeypatch.setattr(config, "now", lambda: FIXED_NOW)
     main._hits.clear()
+    main._chat_hits.clear()
+    main._chat_day.update(day="", count=0)
     with TestClient(main.app) as c:
         yield c
 

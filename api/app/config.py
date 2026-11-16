@@ -36,3 +36,12 @@ SLOT_MINUTES: int = SITE["booking"]["slot_minutes"]
 SERVICES: dict[str, dict] = {s["id"]: s for s in SITE["services"]}
 # data order is Monday..Sunday, same as date.weekday()
 HOURS: list[list[list[str]]] = [h["ranges"] for h in SITE["hours"]]
+
+# ---- FAQ assistant (Claude) ----
+ASSISTANT_MODEL = os.environ.get("DEMO_ASSISTANT_MODEL", "claude-haiku-5-5")
+ASSISTANT_MAX_TOKENS = 700          # thinking counts toward this cap, so leave some room
+CHAT_MAX_MESSAGES = 10              # history window sent by the widget
+CHAT_MAX_CHARS = 400                # per user message
+CHAT_USER_TURNS_PER_SESSION = 8     # user messages allowed in one conversation
+CHAT_PER_IP_PER_HOUR = 30
+CHAT_PER_DAY_GLOBAL = 600           # hard cost cap for the whole demo (risk R6)

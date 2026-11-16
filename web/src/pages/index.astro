@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import HeroArt from "../components/HeroArt.astro";
 import Booking from "../components/Booking.astro";
+import Chat from "../components/Chat.astro";
 import { site, whatsappUrl, formatMoney, hoursSummary, durationText, serviceIcons, trustIcons, stepIcons } from "../lib";
 
 const b = site.business;
@@ -170,6 +171,8 @@ const others = site.services.slice(1);
       </div>
     </section>
   </main>
+
+  <Chat />
 
   <nav class="sticky-bar" aria-label="Acciones rápidas">
     <a class="btn" href="#agendar">Agendar cita</a>
