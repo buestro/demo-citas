@@ -1,0 +1,46 @@
+---
+import "../styles/global.css";
+import { site } from "../lib";
+
+interface Props { title: string; description: string }
+const { title, description } = Astro.props;
+const t = site.theme;
+---
+<!doctype html>
+<html lang="es" style={`--brand:${t.brand};--brand-ink:${t.brand_ink};--brand-soft:${t.brand_soft};--radius:${t.radius}`}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content={t.brand} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="demo-banner">
+      {site.demo.banner} · <a href={site.demo.banner_url}>Quiero algo así para mi consultorio</a>
+    </div>
+    <header class="site-header">
+      <div class="container header-row">
+        <a class="brand-mark" href="/"><span class="brand-dot" aria-hidden="true"></span>{site.business.name}</a>
+        <nav class="header-nav" aria-label="Secciones">
+          <a href="/#servicios">Servicios</a>
+          <a href="/#primera-visita">Primera visita</a>
+          <a href="/#horario">Horario</a>
+          <a href="/#preguntas">Preguntas</a>
+        </nav>
+        <a class="btn btn-small" href="/#agendar">Agendar</a>
+      </div>
+    </header>
+    <slot />
+    <div class="wave" aria-hidden="true"><svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 30c240 40 480 40 720 10s480-30 720 10v10H0z" /></svg></div>
+    <footer class="site-footer">
+      <div class="container">
+        <p><strong>{site.business.name}</strong> · {site.business.location.city}</p>
+        <p><a href="/privacidad">Aviso de privacidad</a> · Página hecha por <a href={site.demo.banner_url}>Buestro</a></p>
+        <p class="small">Demo con datos ficticios: el consultorio, la doctora y los precios no existen.</p>
+      </div>
+    </footer>
+  </body>
+</html>

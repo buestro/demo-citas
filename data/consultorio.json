@@ -21,8 +21,37 @@
       "maps_url": "https://www.google.com/maps/search/?api=1&query=Tlajomulco+de+Z%C3%BA%C3%B1iga+Jalisco"
     },
     "parking": "2 cajones frente al consultorio",
-    "payment_methods": ["Efectivo", "Tarjeta de débito y crédito", "Transferencia"],
-    "invoices": true
+    "payment_methods": [
+      "Efectivo",
+      "Tarjeta de débito y crédito",
+      "Transferencia"
+    ],
+    "invoices": true,
+    "hero_highlight": "familiar",
+    "trust": [
+      "Precios claros desde la primera visita",
+      "Cita en línea en menos de un minuto",
+      "Recordatorio por WhatsApp un día antes",
+      "Sin datos de salud en la agenda"
+    ],
+    "first_visit": [
+      {
+        "title": "Agenda en línea",
+        "text": "Eliges servicio, día y hora, y dejas solo tu nombre y teléfono. Toma menos de un minuto."
+      },
+      {
+        "title": "Valoración de 30 min",
+        "text": "La doctora te revisa, te explica las opciones y te da el precio antes de empezar."
+      },
+      {
+        "title": "Tú decides",
+        "text": "Si quieres continuar, agendas el tratamiento. Sin compromiso ni presión."
+      }
+    ],
+    "specialties": [
+      "Odontología general",
+      "Atención familiar"
+    ]
   },
   "contact": {
     "whatsapp": "523328298412",
@@ -35,48 +64,214 @@
     "radius": "14px"
   },
   "hours": [
-    { "day": "lunes", "ranges": [["10:00", "14:00"], ["16:00", "20:00"]] },
-    { "day": "martes", "ranges": [["10:00", "14:00"], ["16:00", "20:00"]] },
-    { "day": "miércoles", "ranges": [["10:00", "14:00"], ["16:00", "20:00"]] },
-    { "day": "jueves", "ranges": [["10:00", "14:00"], ["16:00", "20:00"]] },
-    { "day": "viernes", "ranges": [["10:00", "14:00"], ["16:00", "20:00"]] },
-    { "day": "sábado", "ranges": [["09:00", "14:00"]] },
-    { "day": "domingo", "ranges": [] }
+    {
+      "day": "lunes",
+      "ranges": [
+        [
+          "10:00",
+          "14:00"
+        ],
+        [
+          "16:00",
+          "20:00"
+        ]
+      ]
+    },
+    {
+      "day": "martes",
+      "ranges": [
+        [
+          "10:00",
+          "14:00"
+        ],
+        [
+          "16:00",
+          "20:00"
+        ]
+      ]
+    },
+    {
+      "day": "miércoles",
+      "ranges": [
+        [
+          "10:00",
+          "14:00"
+        ],
+        [
+          "16:00",
+          "20:00"
+        ]
+      ]
+    },
+    {
+      "day": "jueves",
+      "ranges": [
+        [
+          "10:00",
+          "14:00"
+        ],
+        [
+          "16:00",
+          "20:00"
+        ]
+      ]
+    },
+    {
+      "day": "viernes",
+      "ranges": [
+        [
+          "10:00",
+          "14:00"
+        ],
+        [
+          "16:00",
+          "20:00"
+        ]
+      ]
+    },
+    {
+      "day": "sábado",
+      "ranges": [
+        [
+          "09:00",
+          "14:00"
+        ]
+      ]
+    },
+    {
+      "day": "domingo",
+      "ranges": []
+    }
   ],
   "booking": {
     "slot_minutes": 30,
-    "fields": ["name", "phone", "service", "datetime"],
+    "fields": [
+      "name",
+      "phone",
+      "service",
+      "datetime"
+    ],
     "minor_policy": "Si el paciente es menor, agenda el adulto con su propio nombre y teléfono.",
     "cancel_notice_hours": 24,
     "reminder_hours_before": 24
   },
   "services": [
-    { "id": "assessment", "name": "Valoración (primera visita)", "price_from": 300, "duration_minutes": 30, "description": "La doctora revisa y te explica qué tratamiento necesitas y cuánto costaría." },
-    { "id": "cleaning", "name": "Limpieza dental", "price_from": 600, "duration_minutes": 45, "description": "Limpieza profesional para quitar sarro y manchas." },
-    { "id": "filling", "name": "Resina (curación)", "price_from": 800, "duration_minutes": 60, "description": "Curación del color del diente. Precio por pieza." },
-    { "id": "extraction", "name": "Extracción simple", "price_from": 900, "duration_minutes": 45, "description": "Extracción de una pieza sin cirugía." },
-    { "id": "whitening", "name": "Blanqueamiento en consultorio", "price_from": 3500, "duration_minutes": 90, "description": "Requiere valoración previa." },
-    { "id": "urgent", "name": "Urgencia dental", "price_from": 500, "duration_minutes": 30, "description": "Dolor o golpe, en el primer espacio libre del día." }
+    {
+      "id": "assessment",
+      "name": "Valoración (primera visita)",
+      "price_from": 300,
+      "duration_minutes": 30,
+      "description": "La doctora revisa y te explica qué tratamiento necesitas y cuánto costaría."
+    },
+    {
+      "id": "cleaning",
+      "name": "Limpieza dental",
+      "price_from": 600,
+      "duration_minutes": 45,
+      "description": "Limpieza profesional para quitar sarro y manchas."
+    },
+    {
+      "id": "filling",
+      "name": "Resina (curación)",
+      "price_from": 800,
+      "duration_minutes": 60,
+      "description": "Curación del color del diente. Precio por pieza."
+    },
+    {
+      "id": "extraction",
+      "name": "Extracción simple",
+      "price_from": 900,
+      "duration_minutes": 45,
+      "description": "Extracción de una pieza sin cirugía."
+    },
+    {
+      "id": "whitening",
+      "name": "Blanqueamiento en consultorio",
+      "price_from": 3500,
+      "duration_minutes": 90,
+      "description": "Requiere valoración previa."
+    },
+    {
+      "id": "urgent",
+      "name": "Urgencia dental",
+      "price_from": 500,
+      "duration_minutes": 30,
+      "description": "Dolor o golpe, en el primer espacio libre del día."
+    }
   ],
   "faq": [
-    { "q": "¿Cuál es su horario?", "a": "De lunes a viernes de 10:00 a 14:00 y de 16:00 a 20:00. Los sábados de 9:00 a 14:00. Los domingos está cerrado." },
-    { "q": "¿Dónde están?", "a": "En Tlajomulco de Zúñiga, zona Santa Fe. En la página hay un botón \"Cómo llegar\" que abre Google Maps." },
-    { "q": "¿Tienen estacionamiento?", "a": "Sí, 2 cajones frente al consultorio." },
-    { "q": "¿Cuánto cuesta la valoración?", "a": "$300. Dura unos 30 minutos y en ella la doctora te explica qué tratamiento necesitas y cuánto costaría." },
-    { "q": "¿Cuánto cuesta una limpieza?", "a": "Desde $600. Dura unos 45 minutos." },
-    { "q": "¿Cuánto cuesta una resina?", "a": "Desde $800 por pieza. El precio final se confirma en la valoración." },
-    { "q": "¿Hacen blanqueamiento?", "a": "Sí, en consultorio, desde $3,500. Primero se necesita una valoración." },
-    { "q": "¿Qué formas de pago aceptan?", "a": "Efectivo, tarjeta de débito y crédito, y transferencia." },
-    { "q": "¿Dan factura?", "a": "Sí. Pídela al pagar y ten a la mano tus datos fiscales." },
-    { "q": "¿Cómo agendo una cita?", "a": "En la sección \"Agendar\" de esta página: eliges el servicio, el día y la hora, y dejas tu nombre y teléfono." },
-    { "q": "¿Cómo cancelo o cambio mi cita?", "a": "Desde el enlace que llega en tu recordatorio, o escribiendo por WhatsApp. Te pedimos avisar con al menos 24 horas." },
-    { "q": "¿Me recuerdan mi cita?", "a": "Sí, recibes un recordatorio por WhatsApp un día antes." },
-    { "q": "¿Atienden urgencias?", "a": "Sí, dentro del horario. Agenda \"Urgencia dental\" en el primer espacio libre o escribe por WhatsApp. Fuera del horario, acude a un servicio de urgencias." },
-    { "q": "¿Atienden a niños?", "a": "Sí, en odontología general. La cita la agenda la mamá, el papá o el tutor con su propio nombre y teléfono." },
-    { "q": "¿Qué llevo a mi primera cita?", "a": "Una identificación y, si los tienes, estudios o radiografías previos. Llega 10 minutos antes." },
-    { "q": "¿Cuánto tiempo dura la consulta?", "a": "Depende del servicio: de 30 minutos (valoración o urgencia) a 90 minutos (blanqueamiento)." },
-    { "q": "¿Aceptan seguros de gastos médicos?", "a": "No trabajamos directamente con aseguradoras, pero te damos factura para que solicites tu reembolso." },
-    { "q": "¿Puedo ir sin cita?", "a": "Te recomendamos agendar. Sin cita se atiende solo si hay un espacio libre." }
+    {
+      "q": "¿Cuál es su horario?",
+      "a": "De lunes a viernes de 10:00 a 14:00 y de 16:00 a 20:00. Los sábados de 9:00 a 14:00. Los domingos está cerrado."
+    },
+    {
+      "q": "¿Dónde están?",
+      "a": "En Tlajomulco de Zúñiga, zona Santa Fe. En la página hay un botón \"Cómo llegar\" que abre Google Maps."
+    },
+    {
+      "q": "¿Tienen estacionamiento?",
+      "a": "Sí, 2 cajones frente al consultorio."
+    },
+    {
+      "q": "¿Cuánto cuesta la valoración?",
+      "a": "$300. Dura unos 30 minutos y en ella la doctora te explica qué tratamiento necesitas y cuánto costaría."
+    },
+    {
+      "q": "¿Cuánto cuesta una limpieza?",
+      "a": "Desde $600. Dura unos 45 minutos."
+    },
+    {
+      "q": "¿Cuánto cuesta una resina?",
+      "a": "Desde $800 por pieza. El precio final se confirma en la valoración."
+    },
+    {
+      "q": "¿Hacen blanqueamiento?",
+      "a": "Sí, en consultorio, desde $3,500. Primero se necesita una valoración."
+    },
+    {
+      "q": "¿Qué formas de pago aceptan?",
+      "a": "Efectivo, tarjeta de débito y crédito, y transferencia."
+    },
+    {
+      "q": "¿Dan factura?",
+      "a": "Sí. Pídela al pagar y ten a la mano tus datos fiscales."
+    },
+    {
+      "q": "¿Cómo agendo una cita?",
+      "a": "En la sección \"Agendar\" de esta página: eliges el servicio, el día y la hora, y dejas tu nombre y teléfono."
+    },
+    {
+      "q": "¿Cómo cancelo o cambio mi cita?",
+      "a": "Desde el enlace que llega en tu recordatorio, o escribiendo por WhatsApp. Te pedimos avisar con al menos 24 horas."
+    },
+    {
+      "q": "¿Me recuerdan mi cita?",
+      "a": "Sí, recibes un recordatorio por WhatsApp un día antes."
+    },
+    {
+      "q": "¿Atienden urgencias?",
+      "a": "Sí, dentro del horario. Agenda \"Urgencia dental\" en el primer espacio libre o escribe por WhatsApp. Fuera del horario, acude a un servicio de urgencias."
+    },
+    {
+      "q": "¿Atienden a niños?",
+      "a": "Sí, en odontología general. La cita la agenda la mamá, el papá o el tutor con su propio nombre y teléfono."
+    },
+    {
+      "q": "¿Qué llevo a mi primera cita?",
+      "a": "Una identificación y, si los tienes, estudios o radiografías previos. Llega 10 minutos antes."
+    },
+    {
+      "q": "¿Cuánto tiempo dura la consulta?",
+      "a": "Depende del servicio: de 30 minutos (valoración o urgencia) a 90 minutos (blanqueamiento)."
+    },
+    {
+      "q": "¿Aceptan seguros de gastos médicos?",
+      "a": "No trabajamos directamente con aseguradoras, pero te damos factura para que solicites tu reembolso."
+    },
+    {
+      "q": "¿Puedo ir sin cita?",
+      "a": "Te recomendamos agendar. Sin cita se atiende solo si hay un espacio libre."
+    }
   ],
   "assistant": {
     "rules": [

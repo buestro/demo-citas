@@ -72,8 +72,8 @@ Las ve la landing y son lo único que el asistente puede usar para responder.
 ## 5. Decisiones de diseño
 1. **Fuente única de datos.** `data/consultorio.json` alimenta la landing, la siembra de la agenda y el prompt del asistente. Para un cliente nuevo se cambia ese archivo, más el tema de color.
 2. **Pensada primero para el celular.** Se diseña a 360 px. Lleva una barra fija abajo con "Agendar cita" y "WhatsApp", y botones de al menos 44 px. Qué es, dónde está y cómo agendar se ve sin bajar.
-3. **Tematizable.** Cuatro tokens CSS: `--brand`, `--brand-ink`, `--brand-soft` y `--radius`. La demo usa turquesa clínico, distinto del de Buestro. Reusa los patrones de `buestro.com/src/styles/local-business.css`.
-4. **Ligera.** Astro estático y CSS simple, con Inter autoalojada. El contenido no lleva JS; solo hay islas pequeñas para la agenda y el chat. El mapa es un enlace a Google Maps, sin `iframe`. La meta es Lighthouse ≥ 90 en móvil.
+3. **Tematizable.** Cuatro tokens CSS: `--brand`, `--brand-ink`, `--brand-soft` y `--radius`. La demo usa turquesa clínico sobre fondo crema, con un acento coral solo decorativo.
+4. **Ligera.** Astro estático y CSS simple. Tipografías autoalojadas: Fraunces (títulos, serif expresiva) y Plus Jakarta Sans (texto), distintas de las de buestro.com. El contenido no lleva JS; solo hay islas pequeñas para la agenda y el chat. El mapa es un enlace a Google Maps, sin `iframe`. La meta es Lighthouse ≥ 90 en móvil.
 5. **Honesta como demo.** Lleva una franja fija "Demo de Buestro · consultorio ficticio", la etiqueta `noindex`, una ubicación genérica, un avatar con iniciales (sin foto de una persona real) y la cédula marcada como "ejemplo".
 6. **Privacidad por diseño.** No usa analítica ni cookies. El formulario pide solo los datos mínimos. El aviso de privacidad del consultorio ficticio se adapta de `plantilla-aviso-cliente.md`.
 
@@ -117,3 +117,11 @@ Ruta aparte `/consultorio` (paquete 1.6): citas del día y vista previa del reco
 | 1:00–1:25 | Chat | "Este asistente contesta horarios, precios y cómo llegar, a cualquier hora." *(Preguntar "¿tienen estacionamiento?". Luego "me duele una muela, ¿qué me tomo?" para mostrar que no diagnostica.)* |
 | 1:25–1:45 | Recordatorio | "Un día antes le llega este recordatorio por WhatsApp, y así bajan las inasistencias." |
 | 1:45–2:00 | Vista de la doctora | "Y tú ves tus citas del día. Todo instalado en 7 a 10 días, por $5,500 y $750 al mes." |
+
+## 8. Revisión de diseño (16-nov-2026)
+La primera versión se parecía demasiado a `buestro.com`. La segunda sigue prácticas actuales y evita lo que no aporta:
+- **Sí:** tipografía grande con carácter; cuadrícula tipo bento para los servicios; estado "Abierto ahora" calculado con el horario real (zona de México); señales de confianza con íconos; sección "Tu primera visita"; franja de urgencias; barra de acciones flotante en móvil; aparición al hacer scroll solo con CSS; animación de las preguntas frecuentes; todo respeta `prefers-reduced-motion`.
+- **No (a propósito):** videos de fondo, ventanas emergentes de chat, reseñas o testimonios inventados y fotos de stock.
+- **Fuentes consultadas:** guías de diseño web para consultorios dentales y tendencias 2026. Son sobre todo blogs de agencias, así que se tomó lo que repiten y se descartaron las cifras sin respaldo.
+- **Ilustración y movimiento (sin dependencias):** mascota dental en SVG incrustado, con tarjetas flotantes que muestran el producto ("Cita confirmada", "Recordatorio enviado"). Animaciones solo con CSS: entrada escalonada, flotación, parpadeo, destellos, brillo en botones y subrayado que se dibuja al hacer scroll. Todo se desactiva con `prefers-reduced-motion`. Lighthouse móvil: 100 / 100 / 100, CLS 0, LCP 0.9 s.
+- **Fotos reales:** no se usan en la demo (consultorio ficticio y sin licencias). Para un cliente real se agregan desde el archivo de datos.

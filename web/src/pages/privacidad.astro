@@ -1,0 +1,44 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { site } from "../lib";
+const b = site.business;
+---
+<Layout title={`Aviso de privacidad · ${b.name}`} description={`Aviso de privacidad de ${b.name}.`}>
+  <main class="section">
+    <div class="container prose" style="max-width:44rem">
+      <p class="small">Aviso de ejemplo para una demo. {b.name} es ficticio: en un consultorio real este texto lo redacta Buestro con los datos del cliente.</p>
+      <h1>Aviso de privacidad</h1>
+      <p class="small">Última actualización: 16 de noviembre de 2026</p>
+
+      <h2>1. ¿Quién es el responsable de tus datos?</h2>
+      <p><strong>{b.name}</strong> (ficticio), {b.location.city}.</p>
+
+      <h2>2. ¿Qué datos recabamos?</h2>
+      <ul>
+        <li>Nombre.</li>
+        <li>Número de teléfono o WhatsApp.</li>
+        <li>Servicio que deseas y fecha y hora de tu cita.</li>
+      </ul>
+      <p><strong>No te pedimos, por medio de la agenda en línea, de los recordatorios ni del asistente, datos de salud, diagnósticos ni motivos de consulta.</strong> Te pedimos no escribirlos en esos medios. Si el paciente es menor, la cita la agenda el padre, la madre o el tutor con sus propios datos.</p>
+
+      <h2>3. ¿Para qué los usamos?</h2>
+      <ul>
+        <li>Agendar, confirmar, cambiar o cancelar tu cita.</li>
+        <li>Enviarte un recordatorio de tu cita por WhatsApp.</li>
+        <li>Contestar tus preguntas.</li>
+      </ul>
+      <p>No usamos tus datos para promociones.</p>
+
+      <h2>4. ¿Con quién los compartimos?</h2>
+      <p>No vendemos ni cedemos tus datos. Usamos proveedores tecnológicos que los tratan por nuestra cuenta: Buestro (instala y da mantenimiento al sistema), Meta (WhatsApp) y los servicios de alojamiento de la página y de la agenda. Algunos pueden estar fuera de México.</p>
+
+      <h2>5. Cookies</h2>
+      <p>Esta página no usa cookies de rastreo ni analítica.</p>
+
+      <h2>6. Tus derechos ARCO</h2>
+      <p>Puedes acceder a tus datos, rectificarlos, cancelarlos u oponerte a su uso. Un consultorio real indicaría aquí su correo o WhatsApp y los pasos para ejercer estos derechos.</p>
+
+      <p><a href="/">← Volver al consultorio</a></p>
+    </div>
+  </main>
+</Layout>
