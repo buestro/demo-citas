@@ -40,6 +40,12 @@ export const serviceIcons: Record<string, string> = {
   urgent: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
 };
 
+export const stepIcons = [
+  '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+  '<circle cx="11" cy="11" r="6"/><path d="m20 20-4.200-4.200"/>',
+  '<path d="M20 6 9 17l-5-5"/>',
+];
+
 export const trustIcons = [
   '<path d="M20 6 9 17l-5-5"/>',
   '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/>',

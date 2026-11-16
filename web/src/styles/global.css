@@ -190,3 +190,80 @@ details p { margin: 0 0 1.1rem; color: var(--text-2); }
 
 .prose h2 { margin-top: 2rem; font-size: 1.4rem; }
 .prose li { margin-bottom: 0.35rem; color: var(--text-2); }
+
+/* ---------- Illustration and motion (CSS only) ---------- */
+.hero-side { display: grid; gap: 1.25rem; justify-items: center; }
+.hero-art { position: relative; width: min(100%, 22rem); aspect-ratio: 1; }
+.art-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.hero-art .chip-float {
+  position: absolute; display: inline-flex; align-items: center; gap: 0.45rem; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 999px; padding: 0.45rem 0.85rem; font-size: 0.78rem; font-weight: 700; color: var(--text-2); box-shadow: var(--shadow); white-space: nowrap;
+}
+.chip-float .dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #19a35a; }
+.chip-float .icon { width: 1rem; height: 1rem; color: var(--brand); }
+.chip-float.c1 { left: -2%; top: 14%; }
+.chip-float.c2 { right: -2%; bottom: 20%; }
+@media (min-width: 900px) { .hero-side { justify-items: end; } .status-card { margin-top: -2.5rem; margin-right: 1rem; position: relative; } }
+@media (max-width: 899px) { .hero-art { width: min(62%, 13rem); } .hero-side { gap: 0.5rem; } .chip-float.c1 { left: -14%; } .chip-float.c2 { right: -14%; } .hero-art .chip-float { font-size: 0.7rem; padding: 0.35rem 0.65rem; } }
+
+.step-icon { width: 2.8rem; height: 2.8rem; padding: 0.7rem; border-radius: 50%; background: var(--brand-soft); color: var(--brand-ink); margin-bottom: 0.4rem; transition: transform 0.4s var(--ease); }
+.steps li:hover .step-icon { transform: rotate(-8deg) scale(1.08); }
+
+.urgent { position: relative; overflow: hidden; }
+.urgent-art { display: none; position: absolute; right: 9rem; top: 50%; width: 9rem; fill: rgb(255 255 255 / 8%); stroke: rgb(255 255 255 / 35%); stroke-width: 0.5; transform: translateY(-50%) rotate(8deg); }
+.urgent-art .bolt { fill: var(--accent); stroke: none; transform-origin: center; }
+@media (min-width: 720px) { .urgent-art { display: block; } }
+
+.avatar-wrap { position: relative; width: 6.5rem; height: 6.5rem; }
+.avatar-wrap::before { content: ""; position: absolute; inset: -0.9rem; border-radius: 50%; border: 2px dashed color-mix(in srgb, var(--brand) 45%, transparent); }
+.avatar-wrap .avatar { position: relative; }
+
+.wave { line-height: 0; background: var(--cream); }
+.wave svg { width: 100%; height: 3rem; display: block; }
+.wave path { fill: #14211f; }
+
+.btn { position: relative; overflow: hidden; }
+.btn::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 35%) 50%, transparent 70%); transform: translateX(-120%); }
+.btn:hover::after { transform: translateX(120%); transition: transform 0.7s var(--ease); }
+.btn-soft::after, .btn-light::after { display: none; }
+.tile:hover .icon { transform: rotate(-8deg) scale(1.08); }
+.tile .icon { transition: transform 0.35s var(--ease); }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* page-load entrance, staggered */
+  .hero .container > div:first-child > * { animation: rise 0.8s var(--ease) both; }
+  .hero .container > div:first-child > :nth-child(1) { animation-delay: 0.05s; }
+  .hero .container > div:first-child > :nth-child(2) { animation-delay: 0.15s; }
+  .hero .container > div:first-child > :nth-child(3) { animation-delay: 0.28s; }
+  .hero .container > div:first-child > :nth-child(4) { animation-delay: 0.4s; }
+  .hero-side { animation: rise 0.9s var(--ease) 0.25s both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+  /* hero illustration */
+  .tooth { animation: float 5.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .tooth .shadow { animation: shadow 5.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .eye { animation: blink 5s infinite; transform-box: fill-box; transform-origin: center; }
+  .ring { animation: spin 60s linear infinite; transform-box: fill-box; transform-origin: center; }
+  .spark { animation: twinkle 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .spark.s2 { animation-delay: 0.8s; } .spark.s3 { animation-delay: 1.6s; }
+  .bubble { animation: drift 6s ease-in-out infinite; }
+  .bubble.b2 { animation-delay: 1.5s; animation-duration: 7s; }
+  .chip-float.c1 { animation: bob 6s ease-in-out infinite; }
+  .chip-float.c2 { animation: bob 7s ease-in-out 1.2s infinite; }
+  .urgent-art .bolt { animation: twinkle 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .avatar-wrap::before { animation: spin 40s linear infinite; }
+
+  @keyframes float { 50% { transform: translateY(-14px) rotate(-1.5deg); } }
+  @keyframes shadow { 50% { transform: scaleX(0.85); opacity: 0.07; } }
+  @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes twinkle { 0%, 100% { transform: scale(0.8) rotate(0); opacity: 0.55; } 50% { transform: scale(1.15) rotate(18deg); opacity: 1; } }
+  @keyframes drift { 50% { transform: translateY(-12px); } }
+  @keyframes bob { 50% { transform: translateY(-8px); } }
+
+  /* subtle section-title underline that draws in on scroll */
+  @supports (animation-timeline: view()) {
+    .section-head .eyebrow::after { content: ""; display: block; height: 3px; margin-top: 0.5rem; width: 3rem; background: var(--accent); border-radius: 3px; transform-origin: left; animation: draw linear both; animation-timeline: view(); animation-range: entry 10% entry 50%; }
+    @keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  }
+}
