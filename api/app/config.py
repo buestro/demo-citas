@@ -45,3 +45,13 @@ CHAT_MAX_CHARS = 400                # per user message
 CHAT_USER_TURNS_PER_SESSION = 8     # user messages allowed in one conversation
 CHAT_PER_IP_PER_HOUR = 30
 CHAT_PER_DAY_GLOBAL = 600           # hard cost cap for the whole demo (risk R6)
+
+# ---- Hardening ----
+# How many reverse proxies sit in front of the API (Render = 1). With 0 the client IP is the TCP peer and
+# X-Forwarded-For is ignored: a client can write anything in that header, so it is only trusted for the
+# entry that our own proxy appended (counting from the right).
+TRUSTED_PROXIES = int(os.environ.get("DEMO_TRUSTED_PROXIES", "0"))
+AVAILABILITY_PER_IP_PER_HOUR = 300
+MAX_TRACKED_IPS = 5000               # bounds the memory used by the rate limiters
+REFRESH_EVERY_SECONDS = 60           # purge/seed at most once a minute, not on every request
+ENABLE_DOCS = os.environ.get("DEMO_ENABLE_DOCS") == "1"   # /docs, /redoc and /openapi.json are off by default

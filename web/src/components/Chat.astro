@@ -48,7 +48,7 @@ const quick = [0, 3, 2].map((i) => site.faq[i]?.q).filter(Boolean) as string[];
   const input = document.getElementById("chat-input") as HTMLInputElement;
   const send = document.getElementById("chat-send") as HTMLButtonElement;
   const quick = document.getElementById("chat-quick") as HTMLElement;
-  const history: { role: "user" | "assistant"; content: string }[] = [];
+  const history: { role: "user" | "assistant"; content: string; sig?: string }[] = [];
   let busy = false;
 
   const setOpen = (open: boolean) => {
@@ -70,6 +70,9 @@ const quick = [0, 3, 2].map((i) => site.faq[i]?.q).filter(Boolean) as string[];
     return d;
   };
 
+  // The server wants the last 10 messages and the first one must be the visitor's.
+  const windowed = () => { const w = history.slice(-10); while (w.length && w[0].role === "assistant") w.shift(); return w; };
+
   const turns = () => history.filter((m) => m.role === "user").length;
 
   function lock(message: string) {
@@ -86,24 +89,25 @@ const quick = [0, 3, 2].map((i) => site.faq[i]?.q).filter(Boolean) as string[];
     add("user", text);
     history.push({ role: "user", content: text });
     const typing = add("bot typing", "");
-    typing.innerHTML = "<span></span><span></span><span></span>";
+    for (let i = 0; i < 3; i++) typing.appendChild(document.createElement("span"));
     typing.setAttribute("aria-label", "Escribiendo");
     try {
       const r = await fetch(`${api}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history.slice(-10), website: (form.elements.namedItem("website") as HTMLInputElement).value }),
+        body: JSON.stringify({ messages: windowed(), website: (form.elements.namedItem("website") as HTMLInputElement).value }),
       });
       const data = await r.json().catch(() => ({}));
       typing.remove();
       if (!r.ok) {
         history.pop();
         const detail = typeof data.detail === "string" ? data.detail : "No pude responder ahora. Intenta de nuevo.";
+        if (r.status === 422 && /expir/i.test(detail)) { history.length = 0; add("bot error", "La conversación se reinició. Vuelve a escribir tu pregunta."); return; }
         if (r.status === 429 || r.status === 503) lock(detail); else add("bot error", detail);
         return;
       }
       add("bot", data.reply);
-      history.push({ role: "assistant", content: data.reply });
+      history.push({ role: "assistant", content: data.reply, sig: data.sig });
       if (turns() >= maxTurns) lock("Llegaste al límite de mensajes de esta demo.");
     } catch {
       typing.remove(); history.pop();

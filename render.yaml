@@ -11,5 +11,11 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
+      - key: DEMO_TRUSTED_PROXIES
+        value: "1"    # Render's proxy is in front of the API; confirm on the first deploy (see api/README.md)
+      - key: DEMO_SIGNING_KEY
+        generateValue: true   # keeps chat conversations valid across restarts
+      - key: ANTHROPIC_API_KEY
+        sync: false   # paste it in the Render dashboard; never commit it
       - key: DEMO_CORS_ORIGINS
         sync: false   # set to the Vercel URL of the landing page, e.g. https://demo-citas.buestro.com

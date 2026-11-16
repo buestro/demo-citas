@@ -13,8 +13,8 @@ FIXED_NOW = datetime(2026, 11, 23, 10, 30, tzinfo=config.TZ)
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DB_PATH", str(tmp_path / "test.sqlite"))
     monkeypatch.setattr(config, "now", lambda: FIXED_NOW)
-    main._hits.clear()
-    main._chat_hits.clear()
+    for lim in (main.booking_limiter, main.chat_limiter, main.availability_limiter):
+        lim.reset()
     main._chat_day.update(day="", count=0)
     with TestClient(main.app) as c:
         yield c

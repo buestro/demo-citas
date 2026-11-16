@@ -6,7 +6,6 @@ import re
 import secrets
 import sqlite3
 import time
-from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta
 
@@ -14,20 +13,34 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
-from . import assistant, config, db
+from . import assistant, config, db, signing
+from .ratelimit import RateLimiter
 from .slotlogic import candidate_starts
+
+booking_limiter = RateLimiter(lambda: config.BOOKINGS_PER_IP_PER_HOUR, "Demasiados intentos. Prueba de nuevo en un rato.")
+chat_limiter = RateLimiter(lambda: config.CHAT_PER_IP_PER_HOUR, "Has enviado muchos mensajes. Prueba de nuevo en un rato.")
+availability_limiter = RateLimiter(lambda: config.AVAILABILITY_PER_IP_PER_HOUR, "Demasiadas consultas. Prueba de nuevo en un rato.")
+_chat_day = {"day": "", "count": 0}
+_last_refresh = 0.0
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     conn = db.connect()
-    db.init(conn)
-    refresh(conn)
+    refresh(conn, force=True)
     conn.close()
     yield
 
 
-app = FastAPI(title="demo-citas API", version="0.1.0", lifespan=lifespan)
+# the interactive docs are off unless DEMO_ENABLE_DOCS=1 (local development)
+app = FastAPI(
+    title="demo-citas API",
+    version="0.1.0",
+    lifespan=lifespan,
+    docs_url="/docs" if config.ENABLE_DOCS else None,
+    redoc_url="/redoc" if config.ENABLE_DOCS else None,
+    openapi_url="/openapi.json" if config.ENABLE_DOCS else None,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=config.CORS_ORIGINS,
@@ -44,44 +57,24 @@ def get_conn():
         conn.close()
 
 
-def refresh(conn: sqlite3.Connection) -> None:
-    """Drop past appointments and top up the fictional ones for the booking window."""
+def refresh(conn: sqlite3.Connection, force: bool = False) -> None:
+    """Drop past appointments and top up the fictional ones. Throttled: it writes to the database,
+    so it must not run on every request."""
+    global _last_refresh
+    if not force and time.monotonic() - _last_refresh < config.REFRESH_EVERY_SECONDS:
+        return
     db.init(conn)
     db.purge_past(conn)
     db.ensure_seed(conn)
+    _last_refresh = time.monotonic()
 
 
-# ---------------------------------------------------------------- rate limit
-_hits: dict[str, deque] = defaultdict(deque)
-
-
-def check_rate(request: Request) -> None:
-    ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "?")).split(",")[0].strip()
-    q, t = _hits[ip], time.monotonic()
-    while q and t - q[0] > 3600:
-        q.popleft()
-    if len(q) >= config.BOOKINGS_PER_IP_PER_HOUR:
-        raise HTTPException(429, "Demasiados intentos. Prueba de nuevo en un rato.")
-    q.append(t)
-
-
-_chat_hits: dict[str, deque] = defaultdict(deque)
-_chat_day = {"day": "", "count": 0}
-
-
-def check_chat_limits(request: Request) -> None:
-    ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "?")).split(",")[0].strip()
-    q, t = _chat_hits[ip], time.monotonic()
-    while q and t - q[0] > 3600:
-        q.popleft()
-    if len(q) >= config.CHAT_PER_IP_PER_HOUR:
-        raise HTTPException(429, "Has enviado muchos mensajes. Prueba de nuevo en un rato.")
+def check_chat_daily_cap() -> None:
     today = config.now().date().isoformat()
     if _chat_day["day"] != today:
         _chat_day.update(day=today, count=0)
     if _chat_day["count"] >= config.CHAT_PER_DAY_GLOBAL:
         raise HTTPException(503, "El asistente descansa por hoy. Escríbenos por WhatsApp.")
-    q.append(t)
     _chat_day["count"] += 1
 
 
@@ -115,7 +108,8 @@ class BookingIn(BaseModel):
 
 class ChatMessage(BaseModel):
     role: str = Field(pattern=r"^(user|assistant)$")
-    content: str = Field(min_length=1, max_length=2000)
+    content: str = Field(min_length=1, max_length=4000)
+    sig: str = Field(default="", max_length=64)  # required on assistant turns: proves the server wrote them
 
 
 class ChatIn(BaseModel):
@@ -156,7 +150,8 @@ def _free_starts(conn: sqlite3.Connection, day: date, service_id: str) -> list[d
 
 
 @app.get("/api/availability")
-def availability(service_id: str, date: date, conn: sqlite3.Connection = Depends(get_conn)):
+def availability(service_id: str, date: date, request: Request, conn: sqlite3.Connection = Depends(get_conn)):
+    availability_limiter.hit(request)
     if service_id not in config.SERVICES:
         raise HTTPException(404, "Servicio no encontrado.")
     _check_window(date)
@@ -172,7 +167,7 @@ def availability(service_id: str, date: date, conn: sqlite3.Connection = Depends
 def book(body: BookingIn, request: Request, conn: sqlite3.Connection = Depends(get_conn)):
     if body.website:
         raise HTTPException(400, "Solicitud no válida.")
-    check_rate(request)
+    booking_limiter.hit(request)
     if body.service_id not in config.SERVICES:
         raise HTTPException(404, "Servicio no encontrado.")
     _check_window(body.date)
@@ -200,6 +195,8 @@ def book(body: BookingIn, request: Request, conn: sqlite3.Connection = Depends(g
     except sqlite3.IntegrityError:
         conn.execute("ROLLBACK")
         raise HTTPException(409, "Ese horario acaba de ser tomado. Elige otro.")
+    except sqlite3.OperationalError:  # database busy
+        raise HTTPException(503, "La agenda está ocupada. Intenta de nuevo en unos segundos.")
     svc = config.SERVICES[body.service_id]
     return {
         "id": appt_id,
@@ -224,19 +221,27 @@ def cancel(appt_id: str, body: CancelIn, conn: sqlite3.Connection = Depends(get_
 
 @app.post("/api/chat")
 def chat(body: ChatIn, request: Request):
-    """FAQ assistant. Stateless: the widget sends the (short) history, nothing is stored or logged."""
+    """FAQ assistant. Stateless: the widget sends the (short) history, nothing is stored or logged.
+    Assistant turns must carry the signature the server issued, so they cannot be forged."""
     if body.website:
         raise HTTPException(400, "Solicitud no válida.")
-    msgs = [{"role": m.role, "content": m.content.strip()} for m in body.messages]
+    msgs = [{"role": m.role, "content": m.content.strip(), "sig": m.sig} for m in body.messages]
     if msgs[-1]["role"] != "user" or msgs[0]["role"] != "user":
         raise HTTPException(422, "La conversación debe empezar y terminar con un mensaje tuyo.")
     if any(len(m["content"]) > config.CHAT_MAX_CHARS for m in msgs if m["role"] == "user"):
         raise HTTPException(422, f"Escribe mensajes de máximo {config.CHAT_MAX_CHARS} caracteres.")
+    if any(m["role"] == "assistant" and not signing.verify(m["content"], m["sig"]) for m in msgs):
+        raise HTTPException(422, "La conversación expiró. Empieza de nuevo.")
     if sum(m["role"] == "user" for m in msgs) > config.CHAT_USER_TURNS_PER_SESSION:
         raise HTTPException(429, "Llegaste al límite de mensajes de esta demo. Para más dudas, escríbenos por WhatsApp.")
-    check_chat_limits(request)
+    chat_limiter.hit(request)
+    check_chat_daily_cap()
     try:
-        out = assistant.reply(msgs)
+        out = assistant.reply([{"role": m["role"], "content": m["content"]} for m in msgs])
     except assistant.AssistantUnavailable:
         raise HTTPException(503, "El asistente no está disponible por ahora. Escríbenos por WhatsApp.")
-    return {"reply": out["text"], "remaining": config.CHAT_USER_TURNS_PER_SESSION - sum(m["role"] == "user" for m in msgs)}
+    return {
+        "reply": out["text"],
+        "sig": signing.sign(out["text"]),
+        "remaining": config.CHAT_USER_TURNS_PER_SESSION - sum(m["role"] == "user" for m in msgs),
+    }
