@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import HeroArt from "../components/HeroArt.astro";
+import Booking from "../components/Booking.astro";
 import { site, whatsappUrl, formatMoney, hoursSummary, durationText, serviceIcons, trustIcons, stepIcons } from "../lib";
 
 const b = site.business;
@@ -99,10 +100,9 @@ const others = site.services.slice(1);
           <span class="eyebrow">Agendar</span>
           <h2>Elige tu día y hora</h2>
         </div>
-        <div class="book-box reveal">
-          <h3>Aquí irá la agenda en línea</h3>
-          <p>Elegirás el servicio, el día y la hora, y dejarás solo tu nombre y teléfono. Se conecta en el siguiente paquete del proyecto.</p>
-          <p class="small" style="margin:0">No pedimos motivo de consulta ni datos de salud. Si el paciente es menor, agenda el adulto con su propio nombre y teléfono.</p>
+        <div class="book-card reveal">
+          <Booking />
+          <p class="small" style="margin:1rem 0 0">No pedimos motivo de consulta ni datos de salud. Si el paciente es menor, agenda el adulto con su propio nombre y teléfono.</p>
         </div>
       </div>
     </section>
