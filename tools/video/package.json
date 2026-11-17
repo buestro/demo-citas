@@ -1,0 +1,9 @@
+{
+  "name": "demo-citas-video",
+  "private": true,
+  "description": "Records the promo video of the demo (Playwright + system Chrome) and mixes original lo-fi music",
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "playwright-core": "^1.49.0"
+  }
+}
