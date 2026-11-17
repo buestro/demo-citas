@@ -1,0 +1,150 @@
+---
+// Doctor's view: appointments of the day and a preview of the simulated WhatsApp reminder.
+// It lists names and phones, so it only works with the admin key (see the API's DEMO_ADMIN_KEY).
+import Layout from "../layouts/Layout.astro";
+import { site } from "../lib";
+
+const apiUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:8000";
+const openDays = site.hours.map((h) => h.ranges.length > 0); // Monday..Sunday
+---
+<Layout title={`Vista de la doctora · ${site.business.name}`} description="Citas del día y recordatorio de WhatsApp de la demo.">
+  <main class="section">
+    <div class="container agenda" id="agenda-app" data-api={apiUrl} data-open-days={JSON.stringify(openDays)} data-horizon="14">
+      <p class="small">Vista privada de la demo: solo la doctora ve las citas.</p>
+      <h1>Citas del día</h1>
+
+      <form id="key-form" class="key-form" novalidate>
+        <label class="field">Llave de acceso
+          <input id="key-input" type="password" autocomplete="off" required minlength="16" maxlength="128" />
+        </label>
+        <button class="btn" type="submit">Entrar</button>
+      </form>
+      <p class="form-error" id="agenda-error" role="alert" hidden></p>
+
+      <div id="agenda-panel" hidden>
+        <div class="pill-row days" id="agenda-days" role="radiogroup" aria-label="Día"></div>
+        <p class="small" id="agenda-count" aria-live="polite"></p>
+        <ul class="appt-list" id="appt-list"></ul>
+
+        <section class="wa" id="wa" hidden aria-live="polite">
+          <h2>Recordatorio de WhatsApp <span class="small">(simulado: no se envía nada)</span></h2>
+          <div class="wa-screen">
+            <p class="wa-bubble" id="wa-text"></p>
+            <p class="wa-meta" id="wa-meta"></p>
+          </div>
+        </section>
+        <button class="btn btn-soft" type="button" id="agenda-exit">Salir</button>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const root = document.getElementById("agenda-app") as HTMLElement;
+  const api = (root.dataset.api ?? "").replace(/\/$/, "");
+  const openDays: boolean[] = JSON.parse(root.dataset.openDays ?? "[]");
+  const horizon = Number(root.dataset.horizon ?? 14);
+  const keyForm = document.getElementById("key-form") as HTMLFormElement;
+  const keyInput = document.getElementById("key-input") as HTMLInputElement;
+  const errorEl = document.getElementById("agenda-error")!;
+  const panel = document.getElementById("agenda-panel")!;
+  const daysEl = document.getElementById("agenda-days")!;
+  const countEl = document.getElementById("agenda-count")!;
+  const listEl = document.getElementById("appt-list")!;
+  const wa = document.getElementById("wa")!;
+  const waText = document.getElementById("wa-text")!;
+  const waMeta = document.getElementById("wa-meta")!;
+  // the key lives only in this tab's session storage and travels in a header, never in the URL
+  const store = { get: () => sessionStorage.getItem("agenda-key") ?? "", set: (k: string) => sessionStorage.setItem("agenda-key", k), clear: () => sessionStorage.removeItem("agenda-key") };
+  let day = "";
+
+  const tz = "America/Mexico_City";
+  const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
+  const base = new Date(todayStr + "T12:00:00Z");
+  const label = (iso: string, opts: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat("es-MX", { timeZone: "UTC", ...opts }).format(new Date(iso + "T12:00:00Z"));
+  const showError = (msg: string) => { errorEl.textContent = msg; errorEl.hidden = !msg; };
+
+  for (let i = 0; i <= horizon; i++) {
+    const d = new Date(base.getTime() + i * 86400000);
+    const iso = d.toISOString().slice(0, 10);
+    if (!openDays[(d.getUTCDay() + 6) % 7]) continue;
+    const l = document.createElement("label");
+    l.className = "pill pill-day";
+    const input = document.createElement("input");
+    input.type = "radio"; input.name = "agenda-day"; input.value = iso;
+    const strong = document.createElement("strong");
+    strong.textContent = label(iso, { day: "numeric" });
+    const small = document.createElement("small");
+    small.textContent = label(iso, { month: "short" });
+    const span = document.createElement("span");
+    span.append(label(iso, { weekday: "short" }), strong, small);
+    l.append(input, span);
+    daysEl.appendChild(l);
+  }
+
+  function lock(message = "") {
+    store.clear();
+    panel.hidden = true; keyForm.hidden = false; keyInput.value = "";
+    showError(message);
+  }
+
+  async function load(iso: string) {
+    day = iso; wa.hidden = true; showError("");
+    countEl.textContent = "Cargando…"; listEl.replaceChildren();
+    try {
+      const r = await fetch(`${api}/api/admin/agenda?date=${iso}`, { headers: { "X-Admin-Key": store.get() }, cache: "no-store" });
+      if (r.status === 401 || r.status === 404) return lock(r.status === 401 ? "Llave incorrecta." : "La vista de la doctora no está activada.");
+      if (r.status === 429) { countEl.textContent = ""; return showError("Demasiados intentos. Prueba de nuevo en un rato."); }
+      if (!r.ok) throw new Error();
+      const data = await r.json();
+      keyForm.hidden = true; panel.hidden = false;
+      render(data.appointments);
+    } catch {
+      countEl.textContent = "";
+      showError("No pudimos cargar la agenda. Si la demo estaba dormida, espera unos segundos e intenta otra vez.");
+    }
+  }
+
+  type Appt = { id: string; start: string; end: string; service: string; name: string; phone: string; example: boolean; reminder: string };
+
+  function render(items: Appt[]) {
+    countEl.textContent = items.length ? `${items.length} ${items.length === 1 ? "cita" : "citas"} · toca una para ver su recordatorio` : "No hay citas ese día.";
+    for (const a of items) {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button"; btn.className = "appt";
+      const time = document.createElement("strong");
+      time.textContent = `${a.start}–${a.end}`;
+      const who = document.createElement("span");
+      who.textContent = a.example ? `${a.name} (cita de ejemplo)` : a.name;
+      const meta = document.createElement("small");
+      meta.textContent = a.phone ? `${a.service} · ${a.phone}` : a.service;
+      btn.append(time, who, meta);
+      btn.addEventListener("click", () => {
+        listEl.querySelectorAll(".appt").forEach((b) => b.setAttribute("aria-pressed", "false"));
+        btn.setAttribute("aria-pressed", "true");
+        waText.textContent = a.reminder;
+        waMeta.textContent = `Se enviaría un día antes · ${a.phone ? "al " + a.phone : "a un teléfono de ejemplo"}`;
+        wa.hidden = false;
+        wa.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+      li.appendChild(btn);
+      listEl.appendChild(li);
+    }
+  }
+
+  daysEl.addEventListener("change", (e) => load((e.target as HTMLInputElement).value));
+  keyForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const k = keyInput.value.trim();
+    if (k.length < 16) return showError("Escribe la llave completa.");
+    store.set(k);
+    const first = daysEl.querySelector<HTMLInputElement>("input")!;
+    first.checked = true;
+    load(first.value);
+  });
+  document.getElementById("agenda-exit")!.addEventListener("click", () => lock());
+
+  if (store.get()) { const first = daysEl.querySelector<HTMLInputElement>("input")!; first.checked = true; load(first.value); }
+</script>

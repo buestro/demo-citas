@@ -9,17 +9,18 @@ import time
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
-from . import assistant, config, db, signing
+from . import assistant, config, db, reminder, signing
 from .ratelimit import RateLimiter
 from .slotlogic import candidate_starts
 
 booking_limiter = RateLimiter(lambda: config.BOOKINGS_PER_IP_PER_HOUR, "Demasiados intentos. Prueba de nuevo en un rato.")
 chat_limiter = RateLimiter(lambda: config.CHAT_PER_IP_PER_HOUR, "Has enviado muchos mensajes. Prueba de nuevo en un rato.")
 availability_limiter = RateLimiter(lambda: config.AVAILABILITY_PER_IP_PER_HOUR, "Demasiadas consultas. Prueba de nuevo en un rato.")
+admin_limiter = RateLimiter(lambda: config.ADMIN_PER_IP_PER_HOUR, "Demasiados intentos. Prueba de nuevo en un rato.")
 _chat_day = {"day": "", "count": 0}
 _last_refresh = 0.0
 
@@ -45,7 +46,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=config.CORS_ORIGINS,
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", "X-Admin-Key"],
 )
 
 
@@ -245,3 +246,43 @@ def chat(body: ChatIn, request: Request):
         "sig": signing.sign(out["text"]),
         "remaining": config.CHAT_USER_TURNS_PER_SESSION - sum(m["role"] == "user" for m in msgs),
     }
+
+
+# ---------------------------------------------------------------- doctor's view
+def require_admin(request: Request) -> None:
+    """The agenda shows names and phones, so it needs the admin key (header, never the URL: URLs end up in logs).
+    No configured key means the feature does not exist."""
+    if len(config.ADMIN_KEY) < 16:
+        raise HTTPException(404, "No encontrado.")
+    admin_limiter.hit(request)
+    sent = request.headers.get("x-admin-key", "")
+    if not secrets.compare_digest(sent.encode(), config.ADMIN_KEY.encode()):
+        raise HTTPException(401, "Llave incorrecta.")
+
+
+@app.get("/api/admin/agenda")
+def admin_agenda(date: date, request: Request, response: Response, conn: sqlite3.Connection = Depends(get_conn)):
+    """Appointments of one day with the simulated reminder text for each one."""
+    require_admin(request)
+    response.headers["Cache-Control"] = "no-store"
+    _check_window(date)
+    refresh(conn)
+    rows = conn.execute(
+        "SELECT id, service_id, start, end, name, phone, is_seed FROM appointments WHERE start LIKE ? ORDER BY start",
+        (date.isoformat() + "%",),
+    ).fetchall()
+    items = []
+    for r in rows:
+        start = datetime.strptime(r["start"], db.FMT)
+        svc = config.SERVICES[r["service_id"]]["name"]
+        items.append({
+            "id": r["id"],
+            "start": r["start"][11:],
+            "end": r["end"][11:],
+            "service": svc,
+            "name": r["name"],
+            "phone": "" if r["is_seed"] else r["phone"],
+            "example": bool(r["is_seed"]),
+            "reminder": reminder.build(r["name"], svc, start),
+        })
+    return {"date": date.isoformat(), "appointments": items}

@@ -119,3 +119,79 @@ def test_availability_is_rate_limited(client, monkeypatch):
 @pytest.mark.parametrize("path", ["/docs", "/redoc", "/openapi.json"])
 def test_docs_are_not_exposed(client, path):
     assert client.get(path).status_code == 404
+
+
+# ---------------------------------------------------------------- doctor's view
+ADMIN_KEY = "k" * 24
+
+
+@pytest.fixture()
+def admin(client, monkeypatch):
+    monkeypatch.setattr(config, "ADMIN_KEY", ADMIN_KEY)
+    main.admin_limiter.reset()
+    return client
+
+
+def agenda(client, key=ADMIN_KEY, day="2026-11-24"):
+    headers = {"X-Admin-Key": key} if key is not None else {}
+    return client.get(f"/api/admin/agenda?date={day}", headers=headers)
+
+
+def test_admin_disabled_without_configured_key(client, monkeypatch):
+    monkeypatch.setattr(config, "ADMIN_KEY", "")
+    assert agenda(client, key="").status_code == 404
+
+
+def test_admin_disabled_with_short_key(client, monkeypatch):
+    monkeypatch.setattr(config, "ADMIN_KEY", "corta")
+    assert agenda(client, key="corta").status_code == 404
+
+
+def test_admin_requires_key(admin):
+    assert agenda(admin, key=None).status_code == 401
+    assert agenda(admin, key="x" * 24).status_code == 401
+    assert agenda(admin, key=ADMIN_KEY[:-1]).status_code == 401
+
+
+def test_admin_key_in_url_is_not_accepted(admin):
+    assert admin.get(f"/api/admin/agenda?date=2026-11-24&key={ADMIN_KEY}").status_code == 401
+
+
+def test_admin_lists_appointments_with_reminder(admin):
+    assert book(admin, name="Ana Pérez", phone="33 1234 5678").status_code == 201
+    r = agenda(admin)
+    assert r.status_code == 200
+    assert r.headers["cache-control"] == "no-store"
+    mine = [a for a in r.json()["appointments"] if a["name"] == "Ana Pérez"]
+    assert len(mine) == 1
+    a = mine[0]
+    assert a["phone"] == "3312345678" and a["start"] == "10:00" and not a["example"]
+    assert a["reminder"].startswith("Hola Ana,")
+    assert "martes 24 de noviembre a las 10:00" in a["reminder"]
+    assert "token" not in a
+
+
+def test_admin_hides_seed_phone_and_has_no_token_anywhere(admin):
+    items = agenda(admin).json()["appointments"]
+    assert items and all(i["example"] for i in items)
+    assert all(i["phone"] == "" for i in items)
+    assert "token" not in agenda(admin).text
+
+
+def test_admin_agenda_is_sorted_and_limited_to_window(admin):
+    starts = [a["start"] for a in agenda(admin).json()["appointments"]]
+    assert starts == sorted(starts)
+    assert agenda(admin, day="2026-12-30").status_code == 422
+    assert agenda(admin, day="2026-11-01").status_code == 422
+
+
+def test_admin_is_rate_limited(admin, monkeypatch):
+    monkeypatch.setattr(config, "ADMIN_PER_IP_PER_HOUR", 3)
+    codes = [agenda(admin, key="x" * 24).status_code for _ in range(4)]
+    assert codes == [401, 401, 401, 429]
+
+
+def test_admin_has_no_public_listing_of_phones(client):
+    book(client, name="Ana Pérez", phone="33 1234 5678")
+    for path in ("/api/appointments", "/api/agenda", "/api/admin/agenda?date=2026-11-24"):
+        assert "3312345678" not in client.get(path).text
