@@ -13,3 +13,6 @@ Everything in this demo is fictional. It stores no health data and no data about
 1. **Render** (API): New > Blueprint from this repo. Set `ANTHROPIC_API_KEY`, `DEMO_ADMIN_KEY` and `DEMO_CORS_ORIGINS` (the Vercel URL, no trailing slash) in the dashboard. `DEMO_TRUSTED_PROXIES=1` and `DEMO_SIGNING_KEY` come from `render.yaml`.
 2. **Vercel** (web): import the repo with root directory `web/` and set `PUBLIC_API_URL` to the Render URL. `web/vercel.json` adds the security headers; its CSP allows scripts only from the site itself (the scripts are bundled, never inline) and API calls to `*.onrender.com`. If the API lives on another domain, add it to `connect-src`.
 3. Check the first deploy: `/api/health`, a booking from a phone, `/consultorio` with the key, and the response headers of the site.
+
+## Video promocional
+`tools/video/` regraba el video de la demo con un solo comando (`./grabar.sh`), en local y sin tocar la demo publicada. Ver `tools/video/README.md`.
