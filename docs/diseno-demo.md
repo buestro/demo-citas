@@ -44,7 +44,7 @@ Las ve la landing y son lo único que el asistente puede usar para responder.
 8. **¿Qué formas de pago aceptan?** Efectivo, tarjeta de débito y crédito, y transferencia.
 9. **¿Dan factura?** Sí. Pídela al pagar y ten a la mano tus datos fiscales.
 10. **¿Cómo agendo una cita?** En la sección "Agendar" de esta página: eliges el servicio, el día y la hora, y dejas tu nombre y teléfono.
-11. **¿Cómo cancelo o cambio mi cita?** Desde el enlace que llega en tu recordatorio, o escribiendo por WhatsApp. Te pedimos avisar con al menos 24 horas.
+11. **¿Cómo cancelo o cambio mi cita?** Respondiendo al recordatorio que te llega por WhatsApp, o escribiéndonos por ese medio. Te pedimos avisar con al menos 24 horas.
 12. **¿Me recuerdan mi cita?** Sí, recibes un recordatorio por WhatsApp un día antes.
 13. **¿Atienden urgencias?** Sí, dentro del horario. Agenda "Urgencia dental" en el primer espacio libre o escribe por WhatsApp. Fuera del horario, acude a un servicio de urgencias.
 14. **¿Atienden a niños?** Sí, en odontología general. La cita la agenda la mamá, el papá o el tutor con su propio nombre y teléfono.
