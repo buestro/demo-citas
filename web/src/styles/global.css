@@ -341,3 +341,18 @@ details p { margin: 0 0 1.1rem; color: var(--text-2); }
 .chat-form input[name="q"]:focus-visible { outline: 3px solid var(--brand); outline-offset: 1px; border-color: var(--brand); }
 .chat-form .btn { box-shadow: none; }
 .chat-note { margin: 0; padding: 0.3rem 1rem 0.7rem; font-size: 0.72rem; color: var(--text-3); background: var(--surface); }
+
+/* ---------- Doctor's view (/consultorio) ---------- */
+.agenda { max-width: 44rem; }
+.key-form { display: grid; gap: 0.9rem; max-width: 24rem; margin: 1rem 0; }
+.appt-list { list-style: none; margin: 0.5rem 0 1.25rem; padding: 0; display: grid; gap: 0.5rem; }
+.appt { width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 0.1rem 0.9rem; align-items: baseline; text-align: left; font: inherit; color: var(--text); background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 0.7rem 1rem; min-height: 48px; cursor: pointer; transition: border-color 0.2s, background-color 0.2s; }
+.appt small { grid-column: 2; color: var(--text-3); }
+.appt:hover { border-color: var(--brand); }
+.appt[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); box-shadow: inset 0 0 0 1px var(--brand); }
+.appt:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+.wa { margin-bottom: 1.5rem; }
+.wa h2 { font-size: 1.15rem; }
+.wa-screen { background: #e7ddd0; border-radius: var(--radius); padding: 1rem; }
+.wa-bubble { margin: 0; max-width: 90%; background: #d9fdd3; color: #111b21; border-radius: 0.75rem 0.75rem 0.2rem 0.75rem; padding: 0.7rem 0.9rem; white-space: pre-wrap; overflow-wrap: anywhere; margin-left: auto; box-shadow: 0 1px 1px rgb(0 0 0 / 12%); }
+.wa-meta { margin: 0.5rem 0 0; font-size: 0.78rem; color: #4a4a4a; text-align: right; }

@@ -55,3 +55,9 @@ AVAILABILITY_PER_IP_PER_HOUR = 300
 MAX_TRACKED_IPS = 5000               # bounds the memory used by the rate limiters
 REFRESH_EVERY_SECONDS = 60           # purge/seed at most once a minute, not on every request
 ENABLE_DOCS = os.environ.get("DEMO_ENABLE_DOCS") == "1"   # /docs, /redoc and /openapi.json are off by default
+
+# ---- Doctor's view (admin) ----
+# Without a key of at least 16 characters the admin endpoints are disabled (404), so a deploy that forgets
+# the variable exposes nothing.
+ADMIN_KEY = os.environ.get("DEMO_ADMIN_KEY", "")
+ADMIN_PER_IP_PER_HOUR = 60
